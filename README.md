@@ -2,7 +2,7 @@
 
 A simple browser-based tool to create your own portfolio page — pick a preset, fill in your details, and download your ready-to-deploy HTML file. No frameworks, no build step, just open `index.html` and go.
 
-**Live demo:** [https://portfolio-builder-krishna.netlify.app](https://portfolio-builder-krishna.netlify.app)
+**Live demo:** [https://krishna-portfolio-builder.netlify.app](https://krishna-portfolio-builder.netlify.app)
 
 ---
 
