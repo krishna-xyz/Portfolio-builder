@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Builder</title>
+  <style>
+    /* reset + base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6366f1;
+      --accent-light: #e0e7ff;
+      --bg: #f8f8f8;
+      --surface: #ffffff;
+      --border: #e2e2e2;
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .logo { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .header-actions { display: flex; gap: 10px; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    button:hover { opacity: 0.88; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+    /* layout */
+    .app {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      height: calc(100vh - 61px);
+    }
+
+    /* sidebar */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* preset cards */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .preset-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--bg);
+    }
+    .preset-card:hover { border-color: var(--accent); background: var(--accent-light); }
+    .preset-card.active { border-color: var(--accent); background: var(--accent-light); }
+    .preset-card .icon { font-size: 1.6rem; margin-bottom: 4px; }
+    .preset-card .name { font-size: 0.82rem; font-weight: 600; }
+    .preset-card .desc { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    /* form fields */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .field input, .field textarea, .field select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #fff;
+    }
+    .field textarea { resize: vertical; min-height: 80px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* color picker row */
+    .color-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .color-dot:hover { transform: scale(1.15); }
+    .color-dot.active { border-color: var(--text); }
+
+    /* skills/links list */
+    .tag-input-row { display: flex; gap: 6px; }
+    .tag-input-row input { flex: 1; }
+    .tag-input-row button { padding: 8px 12px; white-space: nowrap; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tag-remove {
+      cursor: pointer;
+      font-size: 0.85rem;
+      opacity: 0.6;
+      line-height: 1;
+      background: none;
+      border: none;
+      color: inherit;
+      padding: 0;
+    }
+    .tag-remove:hover { opacity: 1; transform: none; }
+
+    /* preview pane */
+    .preview-pane {
+      overflow-y: auto;
+      background: #d1d5db;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+    .preview-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+      margin-bottom: 12px;
+      align-self: flex-start;
+    }
+    #preview-frame {
+      width: 100%;
+      max-width: 780px;
+      border-radius: var(--radius);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      background: #fff;
+      overflow: hidden;
+      min-height: 600px;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 6px; }
+
+    /* mobile */
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; height: auto; }
+      .preview-pane { display: none; }
+      .sidebar { height: auto; overflow-y: visible; }
+    }
+
+    /* toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Portfolio<span>Builder</span></div>
+  <div class="header-actions">
+    <button class="btn-ghost" onclick="resetForm()">Reset</button>
+    <button class="btn-primary" onclick="downloadPortfolio()">⬇ Download Portfolio</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- Sidebar: controls -->
+  <aside class="sidebar">
+
+    <div>
+      <div class="section-label">Choose a preset</div>
+      <div class="preset-grid" id="preset-grid">
+        <div class="preset-card active" data-preset="developer" onclick="selectPreset(this)">
+          <div class="icon">💻</div>
+          <div class="name">Developer</div>
+          <div class="desc">Code & projects</div>
+        </div>
+        <div class="preset-card" data-preset="artist" onclick="selectPreset(this)">
+          <div class="icon">🎨</div>
+          <div class="name">Artist</div>
+          <div class="desc">Creative & visual</div>
+        </div>
+        <div class="preset-card" data-preset="writer" onclick="selectPreset(this)">
+          <div class="icon">✍️</div>
+          <div class="name">Writer</div>
+          <div class="desc">Blogs & articles</div>
+        </div>
+        <div class="preset-card" data-preset="general" onclick="selectPreset(this)">
+          <div class="icon">🙋</div>
+          <div class="name">General</div>
+          <div class="desc">Any profession</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">About you</div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="field">
+          <label>Full name</label>
+          <input id="f-name" type="text" placeholder="Alex Johnson" oninput="updatePreview()" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Age</label>
+            <input id="f-age" type="number" placeholder="24" min="1" max="120" oninput="updatePreview()" />
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <input id="f-location" type="text" placeholder="Mumbai, India" oninput="updatePreview()" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Tagline</label>
+          <input id="f-tagline" type="text" placeholder="Building things for the web" oninput="updatePreview()" />
+        </div>
+        <div class="field">
+          <label>Bio</label>
+          <textarea id="f-bio" placeholder="A short paragraph about yourself..." oninput="updatePreview()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Links</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="field">
+          <label>GitHub / Behance / Portfolio URL</label>
+          <input id="f-link1" type="url" placeholder="https://github.com/you" oninput="updatePreview()" />
+        </div>
+        <div class="field">
+          <label>LinkedIn URL</label>
+          <input id="f-link2" type="url" placeholder="https://linkedin.com/in/you" oninput="updatePreview()" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input id="f-email" type="email" placeholder="you@example.com" oninput="updatePreview()" />
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label" id="skills-label">Skills</div>
+      <div class="tag-input-row">
+        <input id="skill-input" type="text" placeholder="e.g. JavaScript" onkeydown="if(event.key==='Enter'){addSkill();}" />
+        <button class="btn-outline" onclick="addSkill()">Add</button>
+      </div>
+      <div class="tags" id="skills-tags"></div>
+    </div>
+
+    <div>
+      <div class="section-label">Accent color</div>
+      <div class="color-row" id="color-row">
+        <div class="color-dot active" style="background:#6366f1" data-color="#6366f1" onclick="setAccent(this)"></div>
+        <div class="color-dot" style="background:#0ea5e9" data-color="#0ea5e9" onclick="setAccent(this)"></div>
+        <div class="color-dot" style="background:#10b981" data-color="#10b981" onclick="setAccent(this)"></div>
+        <div class="color-dot" style="background:#f59e0b" data-color="#f59e0b" onclick="setAccent(this)"></div>
+        <div class="color-dot" style="background:#ef4444" data-color="#ef4444" onclick="setAccent(this)"></div>
+        <div class="color-dot" style="background:#ec4899" data-color="#ec4899" onclick="setAccent(this)"></div>
+        <div class="color-dot" style="background:#8b5cf6" data-color="#8b5cf6" onclick="setAccent(this)"></div>
+        <div class="color-dot" style="background:#14b8a6" data-color="#14b8a6" onclick="setAccent(this)"></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Live preview -->
+  <div class="preview-pane">
+    <div class="preview-label">Live Preview</div>
+    <div id="preview-frame"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// state
+let state = {
+  preset: 'developer',
+  accent: '#6366f1',
+  skills: [],
+};
+
+const presetDefaults = {
+  developer: {
+    tagline: 'Full-Stack Developer',
+    bio: 'I build scalable web apps and love open source. Always learning something new.',
+    skillsLabel: 'Skills & Technologies',
+    link1Label: 'GitHub',
+    emoji: '💻',
+  },
+  artist: {
+    tagline: 'Visual Artist & Designer',
+    bio: 'I create bold visual identities and illustrations. My work lives at the intersection of art and storytelling.',
+    skillsLabel: 'Tools & Mediums',
+    link1Label: 'Portfolio / Behance',
+    emoji: '🎨',
+  },
+  writer: {
+    tagline: 'Writer & Content Creator',
+    bio: 'I write about tech, culture, and ideas that matter. Bylines in various publications.',
+    skillsLabel: 'Topics I Cover',
+    link1Label: 'Blog / Medium',
+    emoji: '✍️',
+  },
+  general: {
+    tagline: 'Professional & Enthusiast',
+    bio: 'Passionate about my work and always open to new opportunities and collaborations.',
+    skillsLabel: 'What I Do',
+    link1Label: 'Website / Portfolio',
+    emoji: '🙋',
+  },
+};
+
+function val(id) {
+  return document.getElementById(id)?.value?.trim() || '';
+}
+
+function selectPreset(el) {
+  document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state.preset = el.dataset.preset;
+  // update skills label to match preset
+  document.getElementById('skills-label').textContent = presetDefaults[state.preset].skillsLabel;
+  updatePreview();
+}
+
+function setAccent(el) {
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+  state.accent = el.dataset.color;
+  document.documentElement.style.setProperty('--accent', state.accent);
+  updatePreview();
+}
+
+function addSkill() {
+  const input = document.getElementById('skill-input');
+  const val = input.value.trim();
+  if (!val || state.skills.includes(val)) { input.value = ''; return; }
+  state.skills.push(val);
+  input.value = '';
+  renderSkillTags();
+  updatePreview();
+}
+
+function removeSkill(skill) {
+  state.skills = state.skills.filter(s => s !== skill);
+  renderSkillTags();
+  updatePreview();
+}
+
+function renderSkillTags() {
+  const container = document.getElementById('skills-tags');
+  container.innerHTML = state.skills.map(s =>
+    `<span class="tag">${s}<button class="tag-remove" onclick="removeSkill('${s.replace(/'/g,"\\'")}')">✕</button></span>`
+  ).join('');
+}
+
+// generates the output portfolio HTML
+function buildPortfolioHTML(forDownload = false) {
+  const p = presetDefaults[state.preset];
+  const name = val('f-name') || 'Your Name';
+  const age = val('f-age');
+  const location = val('f-location');
+  const tagline = val('f-tagline') || p.tagline;
+  const bio = val('f-bio') || p.bio;
+  const link1 = val('f-link1');
+  const link2 = val('f-link2');
+  const email = val('f-email');
+  const accent = state.accent;
+  const accentLight = hexToRGBA(accent, 0.12);
+  const skills = state.skills;
+
+  const meta = [age ? `${age} yrs` : '', location].filter(Boolean).join(' · ');
+
+  const skillsHTML = skills.length
+    ? `<section class="section">
+        <h2 class="section-title">${p.skillsLabel}</h2>
+        <div class="skills-grid">
+          ${skills.map(s => `<span class="skill-tag">${s}</span>`).join('')}
+        </div>
+      </section>`
+    : '';
+
+  const linksHTML = [
+    link1 && `<a href="${link1}" target="_blank" class="link-btn">${p.link1Label} ↗</a>`,
+    link2 && `<a href="${link2}" target="_blank" class="link-btn">LinkedIn ↗</a>`,
+    email && `<a href="mailto:${email}" class="link-btn">Email me</a>`,
+  ].filter(Boolean).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${name} — Portfolio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f4f4f5;
+      color: #18181b;
+      min-height: 100vh;
+    }
+    .hero {
+      background: linear-gradient(135deg, ${accent} 0%, ${shiftHex(accent, -30)} 100%);
+      color: #fff;
+      padding: 64px 32px 48px;
+      text-align: center;
+    }
+    .hero-emoji { font-size: 3rem; margin-bottom: 12px; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; letter-spacing: -1px; }
+    .hero .tagline {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      opacity: 0.88;
+      margin-top: 8px;
+      font-weight: 400;
+    }
+    .hero .meta { font-size: 0.88rem; opacity: 0.7; margin-top: 8px; }
+    .content { max-width: 740px; margin: 0 auto; padding: 40px 20px 80px; }
+    .section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #71717a;
+      margin-bottom: 14px;
+    }
+    .bio-text {
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: #27272a;
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+    .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-tag {
+      background: ${accentLight};
+      color: ${accent};
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .links-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .link-btn {
+      display: inline-block;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      background: ${accent};
+      color: #fff;
+      transition: opacity 0.15s;
+    }
+    .link-btn:hover { opacity: 0.85; }
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.78rem;
+      color: #a1a1aa;
+      border-top: 1px solid #e4e4e7;
+    }
+    footer a { color: inherit; text-decoration: none; }
+    @media (max-width: 480px) {
+      .hero { padding: 48px 20px 36px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="hero-emoji">${p.emoji}</div>
+    <h1>${name}</h1>
+    <p class="tagline">${tagline}</p>
+    ${meta ? `<p class="meta">${meta}</p>` : ''}
+  </div>
+
+  <div class="content">
+    <section class="section">
+      <h2 class="section-title">About</h2>
+      <p class="bio-text">${bio}</p>
+    </section>
+
+    ${skillsHTML}
+
+    ${linksHTML ? `<section class="section">
+      <h2 class="section-title">Find me</h2>
+      <div class="links-row">${linksHTML}</div>
+    </section>` : ''}
+  </div>
+
+  <footer>Made with <a href="https://github.com/krishna-xyz/portfolio-builder" target="_blank">Portfolio Builder</a> · github.com/krishna-xyz</footer>
+</body>
+</html>`;
+}
+
+function hexToRGBA(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// slightly darkens a hex color for gradients
+function shiftHex(hex, amount) {
+  let r = Math.max(0, Math.min(255, parseInt(hex.slice(1,3),16) + amount));
+  let g = Math.max(0, Math.min(255, parseInt(hex.slice(3,5),16) + amount));
+  let b = Math.max(0, Math.min(255, parseInt(hex.slice(5,7),16) + amount));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+function updatePreview() {
+  const html = buildPortfolioHTML(false);
+  const frame = document.getElementById('preview-frame');
+  // render into a sandboxed iframe
+  frame.innerHTML = `<iframe style="width:100%;border:none;min-height:600px;" srcdoc="${html.replace(/"/g, '&quot;')}"></iframe>`;
+}
+
+function downloadPortfolio() {
+  const html = buildPortfolioHTML(true);
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'portfolio.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('portfolio.html downloaded!');
+}
+
+function resetForm() {
+  ['f-name','f-age','f-location','f-tagline','f-bio','f-link1','f-link2','f-email'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  state.skills = [];
+  renderSkillTags();
+  updatePreview();
+  showToast('Form cleared.');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// kick off
+updatePreview();
+</script>
+</body>
+</html>
